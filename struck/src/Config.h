@@ -68,6 +68,7 @@ public:
 	std::string						sequenceBasePath;
 	std::string						sequenceName;
 	std::string						resultsPath;
+	std::string						trainingLogPath;
 	
 	int								frameWidth;
 	int								frameHeight;

@@ -76,6 +76,22 @@ int main(int argc, char* argv[])
 		}
 	}
 	
+	ofstream trainingLogFile;
+	if (conf.trainingLogPath!= "")
+	{
+		trainingLogFile.open(conf.trainingLogPath.c_str(), ios::out);
+		if (!trainingLogFile)
+		{
+			cout << "error: could not open training log file: " << conf.trainingLogPath << endl;
+			return EXIT_FAILURE;
+		}
+	}
+
+	if (trainingLogFile)
+	{
+		trainingLogFile << "=>main.cpp: read config file" << endl;
+	}
+
 	// if no sequence specified then use the camera
 	bool useCamera = (conf.sequenceName == "");
 	
@@ -168,7 +184,8 @@ int main(int argc, char* argv[])
 	bool paused = false;
 	bool doInitialise = false;
 	srand(conf.seed);
-	for (int frameInd = startFrame; frameInd <= endFrame; ++frameInd)
+	//for (int frameInd = startFrame; frameInd <= endFrame; ++frameInd)
+	for (int frameInd = startFrame; frameInd <= startFrame+1;  ++frameInd)
 	{
 		Mat frame;
 		if (useCamera)
@@ -262,6 +279,11 @@ int main(int argc, char* argv[])
 	if (outFile.is_open())
 	{
 		outFile.close();
+	}
+
+	if (trainingLogFile.is_open())
+	{
+		trainingLogFile.close();
 	}
 	
 	return EXIT_SUCCESS;

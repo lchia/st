@@ -11,6 +11,10 @@ sequenceBasePath = sequences
 # comment this out to disable output.
 resultsPath = log.txt
 
+# path for output training log file.
+# comment this out to disable output.
+trainingLogPath = trainingLog.txt
+
 # video sequence to run the tracker on.
 # comment this out to use webcam.
 sequenceName = girl
