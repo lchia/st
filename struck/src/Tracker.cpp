@@ -91,6 +91,8 @@ void Tracker::Reset()
 	m_needsIntegralHist = false;
 	
 	int numFeatures = m_config.features.size();
+        std::cout<<"m_config: "<<m_config<<std::endl;//added by lch
+        std::cout<<"numFeatures: "<<numFeatures<<std::endl;//added by lch
 	vector<int> featureCounts;
 	for (int i = 0; i < numFeatures; ++i)
 	{
@@ -155,27 +157,37 @@ void Tracker::Track(const cv::Mat& frame)
 {
 	assert(m_initialised);
 	
+        //std::cout<<"frame: "<<frame<<std::endl;//added by lch
 	ImageRep image(frame, m_needsIntegralImage, m_needsIntegralHist);
 	
 	vector<FloatRect> rects = Sampler::PixelSamples(m_bb, m_config.searchRadius);
 	
 	vector<FloatRect> keptRects;
 	keptRects.reserve(rects.size());
+
+        std::cout<<"rects: "<<rects.size()<<std::endl;//added by lch
+
 	for (int i = 0; i < (int)rects.size(); ++i)
 	{
 		if (!rects[i].IsInside(image.GetRect())) continue;
 		keptRects.push_back(rects[i]);
+                if (i == 100)
+                    std::cout<<"rects[100]: "<<rects[i]<<std::endl;//added by lch
+
 	}
 	
 	MultiSample sample(image, keptRects);
 	
 	vector<double> scores;
 	m_pLearner->Eval(sample, scores);
+        
 	
 	double bestScore = -DBL_MAX;
 	int bestInd = -1;
 	for (int i = 0; i < (int)keptRects.size(); ++i)
 	{		
+                if (i%500 == 0)
+                        std::cout<<"scores[i]: "<< scores[i] <<std::endl;//added by lch
 		if (scores[i] > bestScore)
 		{
 			bestScore = scores[i];
@@ -202,6 +214,8 @@ void Tracker::UpdateDebugImage(const vector<FloatRect>& samples, const FloatRect
 	m_debugImage.setTo(0);
 	for (int i = 0; i < (int)samples.size(); ++i)
 	{
+                if (i%1000==0)
+                       std::cout<<"UpdateDebugImage: "<< i <<std::endl;//added by lch
 		int x = (int)(samples[i].XMin() - centre.XMin());
 		int y = (int)(samples[i].YMin() - centre.YMin());
 		m_debugImage.at<float>(m_config.searchRadius+y, m_config.searchRadius+x) = (float)((scores[i]-mn)/(mx-mn));
@@ -218,6 +232,8 @@ void Tracker::UpdateLearner(const ImageRep& image)
 {
 	// note these return the centre sample at index 0
 	vector<FloatRect> rects = Sampler::RadialSamples(m_bb, 2*m_config.searchRadius, 5, 16);
+        std::cout<<"m_bb: "<<m_bb<<std::endl;//added by lch
+        std::cout<<"m_config.searchRadius: "<<m_config.searchRadius<<std::endl;//added by lch
 	//vector<FloatRect> rects = Sampler::PixelSamples(m_bb, 2*m_config.searchRadius, true);
 	
 	vector<FloatRect> keptRects;

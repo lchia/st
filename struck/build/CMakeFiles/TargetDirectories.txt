@@ -1,0 +1,3 @@
+/home/kog/lchpro/app/screening_tracking/struck/build/CMakeFiles/edit_cache.dir
+/home/kog/lchpro/app/screening_tracking/struck/build/CMakeFiles/rebuild_cache.dir
+/home/kog/lchpro/app/screening_tracking/struck/build/CMakeFiles/struck.dir

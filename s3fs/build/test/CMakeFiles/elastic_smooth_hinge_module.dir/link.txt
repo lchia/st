@@ -1,0 +1,1 @@
+/usr/bin/c++    -std=c++11 -Wall -O3 -ftree-vectorize -msse2  -mfpmath=sse  -std=c++11 -Wall -O3 -ftree-vectorize -msse2  -mfpmath=sse   CMakeFiles/elastic_smooth_hinge_module.dir/elastic_smooth_hinge_module.cpp.o  -o elastic_smooth_hinge_module -rdynamic -lm -lpthread ../src/libfsss.a -lm -lpthread 

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libfsss.a  CMakeFiles/fsss.dir/elastic_smooth_hinge_psdca.cpp.o CMakeFiles/fsss.dir/elastic_smooth_hinge_spdc.cpp.o CMakeFiles/fsss.dir/elastic_smooth_hinge.cpp.o CMakeFiles/fsss.dir/elastic_soft_insensitive.cpp.o CMakeFiles/fsss.dir/elastic_soft_insensitive_spdc.cpp.o CMakeFiles/fsss.dir/elastic_soft_insensitive_psdca.cpp.o
+/usr/bin/ranlib libfsss.a

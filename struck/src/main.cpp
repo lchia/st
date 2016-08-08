@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
 	}
 	Config conf(configPath);
 	cout << conf << endl;
-	
+	cout << "conf.features.size() = " << conf.features.size() << endl;
 	if (conf.features.size() == 0)
 	{
 		cout << "error: no features specified in config" << endl;

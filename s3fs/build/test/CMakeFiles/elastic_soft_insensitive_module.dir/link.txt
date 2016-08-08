@@ -1,0 +1,1 @@
+/usr/bin/c++    -std=c++11 -Wall -O3 -ftree-vectorize -msse2  -mfpmath=sse  -std=c++11 -Wall -O3 -ftree-vectorize -msse2  -mfpmath=sse   CMakeFiles/elastic_soft_insensitive_module.dir/elastic_soft_insensitive_module.cpp.o  -o elastic_soft_insensitive_module -rdynamic -lm -lpthread ../src/libfsss.a -lm -lpthread 
