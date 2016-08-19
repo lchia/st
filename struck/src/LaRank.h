@@ -33,12 +33,16 @@
 
 #include <vector>
 #include <Eigen/Core>
-
 #include <opencv/cv.h>
+
+#include <iostream>
+#include <fstream>
 
 class Config;
 class Features;
 class Kernel;
+
+extern std::ofstream trainingLogFile;
 
 class LaRank
 {

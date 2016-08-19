@@ -55,6 +55,12 @@ LaRank::LaRank(const Config& conf, const Features& features, const Kernel& kerne
 	m_kernel(kernel),
 	m_C(conf.svmC)
 {
+	if (trainingLogFile)
+	{
+		trainingLogFile << endl;
+		trainingLogFile << "@^_^@ LaRank::LaRank construct function ........." << endl;
+		trainingLogFile << endl;
+	}
 	int N = conf.svmBudgetSize > 0 ? conf.svmBudgetSize+2 : kMaxSVs;
 	m_K = MatrixXd::Zero(N, N);
 	m_debugImage = Mat(800, 600, CV_8UC3);
@@ -92,10 +98,20 @@ void LaRank::Eval(const MultiSample& sample, std::vector<double>& results)
 
 void LaRank::Update(const MultiSample& sample, int y)
 {
+	if (trainingLogFile)
+	{
+		trainingLogFile << "@LaRank::Update(const MultiSample& smaple, int y)" << endl;
+	}
 	// add new support pattern
 	SupportPattern* sp = new SupportPattern;
 	const vector<FloatRect>& rects = sample.GetRects();
 	FloatRect centre = rects[y];
+	if (trainingLogFile)
+	{
+		trainingLogFile << "  centre =" << centre << endl;
+		trainingLogFile << "  (int)rects.size() = " << (int)rects.size() << endl; //": For each rect, store 'rect-centre' to yv (transformations)" << endl;
+	}
+
 	for (int i = 0; i < (int)rects.size(); ++i)
 	{
 		// express r in coord frame of centre sample
@@ -112,16 +128,53 @@ void LaRank::Update(const MultiSample& sample, int y)
 			sp->images.push_back(im);
 		}
 	}
+	if (trainingLogFile)
+	{
+		trainingLogFile << "  sp = " << sp << endl; //": This is one support pattern." << endl;
+		trainingLogFile << "  SupportPattern* sp; sp->x.size() = " << sp->x.size() << endl;
+		trainingLogFile << "  SupportPattern* sp; sp->yv.size() = " << sp->yv.size() << endl;
+		trainingLogFile << "  SupportPattern* sp; sp->images.size() = " << sp->images.size() << endl; //": This is the rect image." << endl;
+		trainingLogFile << "  @const_cast<Features&>(m_features).Eval(sample, sp->x) .... " << endl; //evaluate features(haar) for each smaple and push it into sp->x ...." << endl;
+	}
+
+
 	// evaluate features for each sample
 	sp->x.resize(rects.size());
 	const_cast<Features&>(m_features).Eval(sample, sp->x);
 	sp->y = y;
 	sp->refCount = 0;
 	m_sps.push_back(sp);
+	if (trainingLogFile)
+	{
+		trainingLogFile << "  SupportPattern* sp; sp->x.size() = " << sp->x.size() << endl; //": This is sp.x, the (haar) feature of each rect." << endl;
+		trainingLogFile << "  SupportPattern* sp; sp->y = " << sp->y << endl; //": This is sp.y, the index of each rect." << endl;
+		trainingLogFile << "  SupportPattern* sp; sp->refCount = " << sp->refCount << endl; //": This is the number of support vectors (sv) of this support pattern (sp)." << endl;
+		trainingLogFile << "  m_sps.size() = " << m_sps.size() << endl; //": This is the support patterns (sps)." << endl;
+	}
+
+	if (trainingLogFile)
+	{
+		trainingLogFile << "*********************************************************************************" << endl;
+		trainingLogFile << "** This is the gate of 'screening'. Inputs: sp. 			 	   **" << endl;
+		trainingLogFile << "*********************************************************************************" << endl;
+		trainingLogFile << "+ ProcessNew((int)m_sps.size()-1) .. ProcessNew(" << (int)m_sps.size() - 1 << ")" << endl;
+	}
 
 	ProcessNew((int)m_sps.size()-1);
+
+	if (trainingLogFile)
+	{
+		trainingLogFile << "+ LaRank::Budgetmaintenance() ...." << endl;
+	}
 	BudgetMaintenance();
 	
+
+	if (trainingLogFile)
+	{
+		trainingLogFile << "+ 10 times ReProcess() && Budgetmaintenance() ...." << endl;
+		trainingLogFile << "  @ReProcess(): ProcessOld() && 10 times Optimize() ...." << endl;
+		trainingLogFile << "==============================================" << endl;
+	}
 	for (int i = 0; i < 10; ++i)
 	{
 		Reprocess();
@@ -239,9 +292,16 @@ pair<int, double> LaRank::MinGradient(int ind)
 
 void LaRank::ProcessNew(int ind)
 {
+	if (trainingLogFile)
+	{
+		trainingLogFile << "  @LaRank::ProcessNew(int ind) ...." << endl;
+		trainingLogFile << "    int AddSupportVector(SupportPattern* x, int y, double g) " << endl; 
+		trainingLogFile << "    int ip = AddSupportVector(m_sps[ind], m_sps[ind]->y, .. ) " << endl; 
+		trainingLogFile << "    int in = AddSupportVector(m_sps[ind], minGrad.first, minGrad.second) " << endl; 
+		trainingLogFile << "    SMOStep(ip, in) ...." << endl;
+	}
 	// gradient is -f(x,y) since loss=0
 	int ip = AddSupportVector(m_sps[ind], m_sps[ind]->y, -Evaluate(m_sps[ind]->x[m_sps[ind]->y],m_sps[ind]->yv[m_sps[ind]->y]));
-
 	pair<int, double> minGrad = MinGradient(ind);
 	int in = AddSupportVector(m_sps[ind], minGrad.first, minGrad.second);
 
@@ -355,6 +415,16 @@ int LaRank::AddSupportVector(SupportPattern* x, int y, double g)
 		m_K(ind,i) = m_K(i,ind);
 	}
 	m_K(ind,ind) = m_kernel.Eval(x->x[y]);
+
+	if ( ! trainingLogFile)
+	{
+		trainingLogFile << "@LaRank::AddSupportVector(SupportPattern* x, int y, double g) " << endl; 
+		trainingLogFile << "  1. SupportVector* sv = new SupportVector; sv = (x, y, g); " << endl; 
+		trainingLogFile << "  2. int ind = (int)m_svs.size() =  " << (int)m_svs.size() << endl; 
+		trainingLogFile << "  3. x.refCount++ = " << x->refCount << endl; 
+		trainingLogFile << "  4. update kernel matrix: [ind, ind] " << endl; 
+		trainingLogFile << "  5. return ind" << endl; 
+	}
 
 	return ind;
 }

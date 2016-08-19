@@ -42,6 +42,8 @@ using namespace cv;
 static const int kLiveBoxWidth = 80;
 static const int kLiveBoxHeight = 80;
 
+ofstream trainingLogFile;
+
 void rectangle(Mat& rMat, const FloatRect& rRect, const Scalar& rColour)
 {
 	IntRect r(rRect);
@@ -76,7 +78,7 @@ int main(int argc, char* argv[])
 		}
 	}
 	
-	ofstream trainingLogFile;
+	//ofstream trainingLogFile;
 	if (conf.trainingLogPath!= "")
 	{
 		trainingLogFile.open(conf.trainingLogPath.c_str(), ios::out);
@@ -90,6 +92,7 @@ int main(int argc, char* argv[])
 	if (trainingLogFile)
 	{
 		trainingLogFile << "=>main.cpp: read config file" << endl;
+		trainingLogFile << conf << endl;
 	}
 
 	// if no sequence specified then use the camera
@@ -142,12 +145,32 @@ int main(int argc, char* argv[])
 		
 		imgFormat = conf.sequenceBasePath+"/"+conf.sequenceName+"/imgs/img%05d.png";
 		
+		if (trainingLogFile)
+		{
+			trainingLogFile << "=>main.cpp: parse frames file " << endl;
+			trainingLogFile << "dataset: " << conf.sequenceName << endl;
+			trainingLogFile << "startFrame: " << startFrame << endl;
+			trainingLogFile << "endFrame:   " << endFrame << endl;
+			trainingLogFile << "imgFormat:  " << imgFormat << endl;
+		}
+
 		// read first frame to get size
 		char imgPath[256];
 		sprintf(imgPath, imgFormat.c_str(), startFrame);
 		Mat tmp = cv::imread(imgPath, 0);
 		scaleW = (float)conf.frameWidth/tmp.cols;
 		scaleH = (float)conf.frameHeight/tmp.rows;
+
+		if (trainingLogFile)
+		{
+			trainingLogFile << endl;
+			trainingLogFile << "=>main.cpp: read first frame to get size" << endl;
+			trainingLogFile << "firstFrame: " << imgPath<< endl;
+			trainingLogFile << "imgRows: " << tmp.rows << endl;
+			trainingLogFile << "imgCols: " << tmp.cols << endl;
+			trainingLogFile << "scaleW:   " << scaleW << endl;
+			trainingLogFile << "scaleH:  " << scaleH << endl;
+		}
 		
 		// read init box from ground truth file
 		string gtFilePath = conf.sequenceBasePath+"/"+conf.sequenceName+"/"+conf.sequenceName+"_gt.txt";
@@ -170,6 +193,15 @@ int main(int argc, char* argv[])
 			return EXIT_FAILURE;
 		}
 		initBB = FloatRect(xmin*scaleW, ymin*scaleH, width*scaleW, height*scaleH);
+
+		if (trainingLogFile)
+		{
+			trainingLogFile << endl;
+			trainingLogFile << "=>main.cpp: read init box from ground truth file" << endl;
+			trainingLogFile << "ground truth file name: " << conf.sequenceName+"_gt.txt" << endl;
+			trainingLogFile << "gtLine: " << gtLine << endl;
+			trainingLogFile << "initBB:  " << initBB << endl;
+		}
 	}
 	
 	
@@ -184,10 +216,21 @@ int main(int argc, char* argv[])
 	bool paused = false;
 	bool doInitialise = false;
 	srand(conf.seed);
-	//for (int frameInd = startFrame; frameInd <= endFrame; ++frameInd)
-	for (int frameInd = startFrame; frameInd <= startFrame+1;  ++frameInd)
+
+	if (trainingLogFile)
+	{
+		trainingLogFile << "=>frameLoop: first frame" << endl;
+	}
+	for (int frameInd = startFrame; frameInd <= endFrame; ++frameInd)
+	//for (int frameInd = startFrame; frameInd <= startFrame+1;  ++frameInd)
 	{
 		Mat frame;
+		if (trainingLogFile)
+		{
+			trainingLogFile << endl;
+			trainingLogFile << "=>main.cpp: start frame loop" << endl;
+		}
+
 		if (useCamera)
 		{
 			Mat frameOrig;
@@ -225,10 +268,23 @@ int main(int argc, char* argv[])
 			resize(frameOrig, frame, Size(conf.frameWidth, conf.frameHeight));
 			cvtColor(frame, result, CV_GRAY2RGB);
 		
+			if (trainingLogFile)
+			{
+				trainingLogFile << ">>frameLoop: " << frameInd << "-th " << endl;
+				trainingLogFile << "frame name: " << imgPath << endl;
+				trainingLogFile << "origImage size: " << frameOrig.size() << endl;
+				//trainingLogFile << "frameOrig rows: " << frameOrig.rows << endl;
+				//trainingLogFile << "frameOrig cols: " << frameOrig.cols << endl;
+				trainingLogFile << "frame size: " << frame.size() << endl;
+				//trainingLogFile << "frame rows: " << frame.rows << endl;
+				//trainingLogFile << "frame cols: " << frame.cols << endl;
+			}
+
 			if (frameInd == startFrame)
 			{
 				tracker.Initialise(frame, initBB);
 			}
+
 		}
 		
 		if (tracker.IsInitialised())

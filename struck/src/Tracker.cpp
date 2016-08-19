@@ -144,10 +144,27 @@ void Tracker::Reset()
 
 void Tracker::Initialise(const cv::Mat& frame, FloatRect bb)
 {
+	std::cout << "@@@@@@@@@@@@@@@@@@@@@Tracker::Initialise------------" << std::endl;
+	if (trainingLogFile)
+        {
+        	trainingLogFile << "@Tracker::Initialise" << endl;
+        }
+
 	m_bb = IntRect(bb);
 	ImageRep image(frame, m_needsIntegralImage, m_needsIntegralHist);
+
+	if (trainingLogFile)
+        {
+        	trainingLogFile << "  m_bb: " << m_bb << endl;
+        	trainingLogFile << "  ImageRep: image" << endl;
+        }
+
 	for (int i = 0; i < 1; ++i)
 	{
+		if (trainingLogFile)
+        	{
+        		trainingLogFile << "  UpdateLearner(image)" << endl;
+        	}
 		UpdateLearner(image);
 	}
 	m_initialised = true;
@@ -157,7 +174,6 @@ void Tracker::Track(const cv::Mat& frame)
 {
 	assert(m_initialised);
 	
-        //std::cout<<"frame: "<<frame<<std::endl;//added by lch
 	ImageRep image(frame, m_needsIntegralImage, m_needsIntegralHist);
 	
 	vector<FloatRect> rects = Sampler::PixelSamples(m_bb, m_config.searchRadius);
@@ -165,8 +181,7 @@ void Tracker::Track(const cv::Mat& frame)
 	vector<FloatRect> keptRects;
 	keptRects.reserve(rects.size());
 
-        std::cout<<"rects: "<<rects.size()<<std::endl;//added by lch
-
+        std::cout<<"rects: "<<rects.size()<<std::endl;//added by lch 
 	for (int i = 0; i < (int)rects.size(); ++i)
 	{
 		if (!rects[i].IsInside(image.GetRect())) continue;
@@ -230,10 +245,13 @@ void Tracker::Debug()
 
 void Tracker::UpdateLearner(const ImageRep& image)
 {
+	if (trainingLogFile)
+        {
+        	trainingLogFile << "@Tracker::UpdateLearner .." << endl;
+        	trainingLogFile << "  Sampler::RadialSamples(m_bb, 2*m_config.searchRadius, 5, 16) -> rects" << endl;
+        }
 	// note these return the centre sample at index 0
 	vector<FloatRect> rects = Sampler::RadialSamples(m_bb, 2*m_config.searchRadius, 5, 16);
-        std::cout<<"m_bb: "<<m_bb<<std::endl;//added by lch
-        std::cout<<"m_config.searchRadius: "<<m_config.searchRadius<<std::endl;//added by lch
 	//vector<FloatRect> rects = Sampler::PixelSamples(m_bb, 2*m_config.searchRadius, true);
 	
 	vector<FloatRect> keptRects;
@@ -243,11 +261,26 @@ void Tracker::UpdateLearner(const ImageRep& image)
 		if (!rects[i].IsInside(image.GetRect())) continue;
 		keptRects.push_back(rects[i]);
 	}
+
+	if (trainingLogFile)
+        {
+        	
+        	trainingLogFile << "  rects[0]" << rects[0] << endl;
+        	trainingLogFile << "  rects.size() = " << rects.size() << endl;
+        	trainingLogFile << "  keptRects.size() = " << keptRects.size() << ": discard rects not Inside Image" << endl;
+        }
 		
 #if VERBOSE		
 	cout << keptRects.size() << " samples" << endl;
 #endif
 		
 	MultiSample sample(image, keptRects);
+
+	if (trainingLogFile)
+        {
+        	
+        	trainingLogFile << "  MultiSameple sample(image, keptRects) ...." << endl;
+		trainingLogFile << "  m_pLearner->Update(smaple, 0) ...." << endl;
+        }
 	m_pLearner->Update(sample, 0);
 }
