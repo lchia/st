@@ -127,6 +127,8 @@ cmath
 -
 
 /home/kog/lchpro/app/screening_tracking/struck/src/LaRank.cpp
+typeinfo
+-
 LaRank.h
 /home/kog/lchpro/app/screening_tracking/struck/src/LaRank.h
 Config.h

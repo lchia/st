@@ -33,6 +33,8 @@
 
 #include <vector>
 
+extern std::ofstream trainingLogFile;
+
 class Sample
 {
 public:

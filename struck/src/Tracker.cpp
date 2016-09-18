@@ -147,7 +147,7 @@ void Tracker::Initialise(const cv::Mat& frame, FloatRect bb)
 	std::cout << "@@@@@@@@@@@@@@@@@@@@@Tracker::Initialise------------" << std::endl;
 	if (trainingLogFile)
         {
-        	trainingLogFile << "@Tracker::Initialise" << endl;
+        	trainingLogFile << "  @Tracker::Initialise" << endl;
         }
 
 	m_bb = IntRect(bb);
@@ -155,15 +155,15 @@ void Tracker::Initialise(const cv::Mat& frame, FloatRect bb)
 
 	if (trainingLogFile)
         {
-        	trainingLogFile << "  m_bb: " << m_bb << endl;
-        	trainingLogFile << "  ImageRep: image" << endl;
+        	trainingLogFile << "   m_bb: " << m_bb << endl;
+        	trainingLogFile << "   ImageRep: image(frame, m_needsIntegralImage, m_needsIntegralHist)" << std::endl;
         }
 
 	for (int i = 0; i < 1; ++i)
 	{
 		if (trainingLogFile)
         	{
-        		trainingLogFile << "  UpdateLearner(image)" << endl;
+        		trainingLogFile << "  @UpdateLearner(image)" << endl;
         	}
 		UpdateLearner(image);
 	}
@@ -186,13 +186,14 @@ void Tracker::Track(const cv::Mat& frame)
 	{
 		if (!rects[i].IsInside(image.GetRect())) continue;
 		keptRects.push_back(rects[i]);
-                if (i == 100)
-                    std::cout<<"rects[100]: "<<rects[i]<<std::endl;//added by lch
-
 	}
 	
 	MultiSample sample(image, keptRects);
 	
+	//This is the Gate of Eval "scores" of each rects given the "sample"
+	if(trainingLogFile) {
+		trainingLogFile << "===========================Gate of Eval(sample, scroes)" << std::endl;
+	}
 	vector<double> scores;
 	m_pLearner->Eval(sample, scores);
         
@@ -212,6 +213,13 @@ void Tracker::Track(const cv::Mat& frame)
 	
 	UpdateDebugImage(keptRects, m_bb, scores);
 	
+	if(trainingLogFile) {
+		trainingLogFile << "===========================Got the predict box" << std::endl;
+		trainingLogFile << "	>bestScore: " << bestScore << std::endl;
+		trainingLogFile << "	>bestInd: " << bestInd << std::endl;
+		trainingLogFile << "	>m_bb: " << keptRects[bestInd] << std::endl;
+		trainingLogFile << "	>UpdateLearner(image) after got the 'm_bb'." << std::endl;
+	}
 	if (bestInd != -1)
 	{
 		m_bb = keptRects[bestInd];
@@ -247,8 +255,8 @@ void Tracker::UpdateLearner(const ImageRep& image)
 {
 	if (trainingLogFile)
         {
-        	trainingLogFile << "@Tracker::UpdateLearner .." << endl;
-        	trainingLogFile << "  Sampler::RadialSamples(m_bb, 2*m_config.searchRadius, 5, 16) -> rects" << endl;
+        	trainingLogFile << "  @Tracker::UpdateLearner .." << endl;
+        	trainingLogFile << "    Sampler::RadialSamples(m_bb, 2*m_config.searchRadius, 5, 16) -> rects" << endl;
         }
 	// note these return the centre sample at index 0
 	vector<FloatRect> rects = Sampler::RadialSamples(m_bb, 2*m_config.searchRadius, 5, 16);
@@ -265,9 +273,9 @@ void Tracker::UpdateLearner(const ImageRep& image)
 	if (trainingLogFile)
         {
         	
-        	trainingLogFile << "  rects[0]" << rects[0] << endl;
-        	trainingLogFile << "  rects.size() = " << rects.size() << endl;
-        	trainingLogFile << "  keptRects.size() = " << keptRects.size() << ": discard rects not Inside Image" << endl;
+        	trainingLogFile << "    centre sample: rects[0] = " << rects[0] << endl;
+        	trainingLogFile << "    number of rects: rects.size() = " << rects.size() << endl;
+        	trainingLogFile << "    number of keptRects: keptRects.size() = " << keptRects.size() << std::endl;
         }
 		
 #if VERBOSE		
@@ -279,8 +287,8 @@ void Tracker::UpdateLearner(const ImageRep& image)
 	if (trainingLogFile)
         {
         	
-        	trainingLogFile << "  MultiSameple sample(image, keptRects) ...." << endl;
-		trainingLogFile << "  m_pLearner->Update(smaple, 0) ...." << endl;
+        	trainingLogFile << "    @MultiSameple sample(image, keptRects) .."<< endl;
+		trainingLogFile << "    @m_pLearner->Update(smaple, 0) .." << endl;
         }
 	m_pLearner->Update(sample, 0);
 }

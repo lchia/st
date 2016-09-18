@@ -271,11 +271,11 @@ int main(int argc, char* argv[])
 			if (trainingLogFile)
 			{
 				trainingLogFile << ">>frameLoop: " << frameInd << "-th " << endl;
-				trainingLogFile << "frame name: " << imgPath << endl;
-				trainingLogFile << "origImage size: " << frameOrig.size() << endl;
+				trainingLogFile << "  frame name: " << imgPath << endl;
+				trainingLogFile << "  origImage size: " << frameOrig.size() << endl;
 				//trainingLogFile << "frameOrig rows: " << frameOrig.rows << endl;
 				//trainingLogFile << "frameOrig cols: " << frameOrig.cols << endl;
-				trainingLogFile << "frame size: " << frame.size() << endl;
+				trainingLogFile << "  frame size: " << frame.size() << endl;
 				//trainingLogFile << "frame rows: " << frame.rows << endl;
 				//trainingLogFile << "frame cols: " << frame.cols << endl;
 			}
@@ -289,6 +289,9 @@ int main(int argc, char* argv[])
 		
 		if (tracker.IsInitialised())
 		{
+			if (trainingLogFile) {
+				trainingLogFile << "@@@Gate of tracking for each frame: main->tracker.Track(frame) .." << std::endl;
+			}
 			tracker.Track(frame);
 			
 			if (!conf.quietMode && conf.debugMode)
